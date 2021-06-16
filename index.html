@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+    <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Calculator</title>
+            <link rel="stylesheet" href="style.css">
+        </head>
+
+    <body>  
+        <div class="generalContainer">
+            <div class="output">
+                <div class="calculation">
+                    <p class="calculation-number"></p>
+                </div>
+                <div class="result">
+                    <p class="result-number"></p>
+                </div>
+            </div>
+            <div class="buttons">
+                <div class="numbers">
+                    <div class="first9">
+                    </div>
+                    <div class="zero">
+                    </div>
+                </div>
+                <div class="operators">
+                </div>
+            </div>
+
+        </div>
+    </body>
+
+    <script>
+    
+    let operators = ["+", "-", "*", "/", "=", "C"]
+    let num_keys = ["7","8","9","4","5","6","1","2","3","0"]
+    let numbers_19 = document.querySelector(".first9");
+    let numbers_0 = document.querySelector(".zero");
+    let domOperators = document.querySelector(".operators");
+    let result = document.querySelector(".result-number");
+    result.innerHTML = "0"
+    let formula = document.querySelector(".calculation-number");
+    let firstNumber = "";
+    let calcOperator = "";
+    let secondNumber = "";
+    let is_result = false;
+    let last_type = "n";
+    let firstInput = true;
+    let clear = false;
+
+    num_keys.forEach(function (i) {
+        if (i != 0) {
+            let numberButton = document.createElement("button");
+            numberButton.innerHTML = i;
+            numberButton.className = "btnNum19";
+            numberButton.addEventListener("click", (e) =>  inputNumbers(e.srcElement.innerHTML));
+            numberButton.addEventListener('transitionend', removeTransition);
+            numberButton.classList.add("key");
+            numbers_19.appendChild(numberButton);  
+        }
+    })
+
+    // adding button for zero
+    let numberButton = document.createElement("button");
+    numberButton.innerHTML = "0";
+    numberButton.className = "btnNum0"
+    numberButton.addEventListener("click", (e) => inputNumbers(e.srcElement.innerHTML));
+    numberButton.addEventListener('transitionend', removeTransition);
+    numberButton.classList.add("key");
+    numbers_0.appendChild(numberButton)
+
+    // adding button for decimal point
+    let decimalButton = document.createElement("button");
+    decimalButton.innerHTML = ".";
+    decimalButton.className = "btnDecimal"
+    decimalButton.addEventListener("click", (e) => inputNumbers(e.srcElement.innerHTML));
+    decimalButton.addEventListener('transitionend', removeTransition);
+    decimalButton.classList.add("key");
+    numbers_0.appendChild(decimalButton)
+
+    // adding button for backspace
+    let backspaceButton = document.createElement("button");
+    backspaceButton.innerHTML = "<";
+    backspaceButton.className = "btnBackSpace"
+    backspaceButton.addEventListener("click", (e) => inputNumbers(e.srcElement.innerHTML));
+    backspaceButton.addEventListener('transitionend', removeTransition);
+    backspaceButton.classList.add("key");
+    numbers_0.appendChild(backspaceButton)
+
+    //adding operators 
+    operators.forEach(element => {
+        let button = document.createElement("button");
+        button.className = "btnOperator"
+        button.innerHTML = element;
+        button.addEventListener("click", (e) => construct(e.srcElement.innerHTML))
+        button.addEventListener('transitionend', removeTransition)
+        button.classList.add("key");
+        domOperators.appendChild(button)        
+    });
+
+    function inputNumbers (number){
+        //if number after "=" delete output (takes as new calculation)        
+        if (calcOperator == "="){
+            clear_output();
+        }
+
+        if (clear) { 
+            clear=false;
+            result.innerHTML="";
+        }
+
+        // backspace functionality - delete if not zero - zero if last number deleted
+        if (number == "&lt;") {
+            if (result.innerHTML!=0) { 
+                result.innerHTML=result.innerHTML.slice(0, result.innerHTML.length - 1);
+                if (result.innerHTML == "") result.innerHTML=0;
+            }
+            return;
+        }
+        
+        // if number is zero but there was a zero return. not doubles zeroes
+        if (result.innerHTML === 0) {
+            if (number== 0) return;
+        }
+        
+        // last type changes to number ()
+        last_type = "n"
+
+
+        if (is_result) {
+            is_result = false;
+            result.innerHTML=number;    
+        }
+        else {
+            if (number == ".") { // if digit is decimal point add it without taking into account previous number
+                result.innerHTML+=number
+            }
+            else {
+                result.innerHTML !== "0"? result.innerHTML+=number:result.innerHTML=number //strict comparison because "0." is digit 0
+            }         
+        }
+
+        // if number is decimal point disable button (prevent multiple decimal points)
+        if (number == ".") {
+            decimalButton.disabled = true
+        }
+
+    }   
+
+
+    function construct(cOperator){
+        decimalButton.disabled = false
+/*         if (result.innerHTML == "0") {
+            return;
+        } */
+
+        // clear results
+        if (cOperator == "C") {
+            clear_output();
+            return
+        }
+        // if last type is operator 
+        // 
+        if (last_type == "o") {
+            if (!(cOperator == "=") & calcOperator == "=") { //if last calculation was "=" and current operator is not =
+                formula.innerHTML= result.innerHTML + " " + cOperator; // formula adds new operator
+            }
+            else {
+                formula.innerHTML = formula.innerHTML.slice(0,formula.innerHTML.length-1) + cOperator // formula changes last operator (so not multiple operator in formula)
+            }
+            calcOperator = cOperator  // new operator for calculation
+            return
+        }
+
+        last_type = "o"
+        
+        if (!firstNumber) {
+            firstNumber = result.innerHTML;
+            calcOperator = cOperator
+            if (firstInput) {
+                formula.innerHTML= result.innerHTML + " " + cOperator;
+                firstInput=false;
+                clear=true;
+            } 
+            else {
+                console.log("vino al else")
+                result.innerHTML="";
+            }
+          
+        }
+        else {
+            secondNumber = result.innerHTML;
+            operate(firstNumber, calcOperator, secondNumber, cOperator);
+            calcOperator = cOperator;
+        }
+    }
+
+    function operate(fNumber, cOperator, sNumber, lastOperator) {
+        let calcResult = 0;
+        switch(cOperator) {
+            case "+":
+                calcResult = add(fNumber, sNumber);
+                console.log("no")
+                break;
+            case "-":
+                calcResult = subtract(fNumber, sNumber);
+            break;
+            case "*":
+                calcResult = multiply(fNumber, sNumber);
+            break;
+            case "/":
+                if (sNumber == 0) {
+                    clear_output();
+                    alert("Can't divide by zero.")
+                    return;
+                }
+                else calcResult = divide(fNumber, sNumber);
+            break;
+        }
+        
+        secondNumber = "";
+        if (lastOperator == "="){
+            formula.innerHTML=formula.innerHTML + " " + sNumber + " ="
+        }
+        else {
+            formula.innerHTML=formula.innerHTML + " " + result.innerHTML + " " + lastOperator;
+        }
+        
+        Number.isInteger(calcResult)?result.innerHTML = calcResult: result.innerHTML = Number.parseFloat(calcResult).toFixed(2);
+        
+        firstNumber = result.innerHTML
+
+        is_result = true;
+        calcOperator = ""      
+    }
+
+    const add = (a,b) => Number(a) + Number(b);
+    const subtract = (a,b) => Number(a)-Number(b);
+    const multiply = (a,b) => Number(a)*Number(b);
+    const divide = (a,b) => Number(a)/Number(b);;
+  
+    window.addEventListener('keydown', checkKey);
+
+    function checkKey(e) { //function that check key pressed
+        if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+        let key = e.key;
+        let keyElement;
+
+        console.log(key)
+        console.log(keyElement)
+
+        if (num_keys.includes(key)) { //if it is number....
+            keys.forEach(function (k) {
+                if (k.innerHTML == key) {
+                    k.classList.add("keyPressedN");
+                }
+            })
+            inputNumbers(key) //... call inputNumbers
+        }
+        else if (operators.includes(key)){ // if it is operator...
+            keys.forEach(function (k) {
+                if (k.innerHTML == key) {
+                    k.classList.add("keyPressed");
+                }
+            })
+            construct(key) //...call construct
+        }
+        else if (key == "Enter"){
+            keys.forEach(function (k) {
+                if (k.innerHTML == "=") {
+                    k.classList.add("keyPressed");
+                }
+            })
+            construct("=")
+        }
+        else if (key == "Delete"){
+            keys.forEach(function (k) {
+                if (k.innerHTML == "C") {
+                    k.classList.add("keyPressed");
+                }
+            })
+            construct("C")
+        }
+        else if (key == "Backspace"){
+            keys.forEach(function (k) {
+                if (k.innerHTML == "&lt;") {
+                    k.classList.add("keyPressed");
+                }
+            })
+            inputNumbers("&lt;")
+        }
+        else if (key == "."){
+            keys.forEach(function (k) {
+                if (k.innerHTML == ".") {
+                    k.classList.add("keyPressed");
+                }
+            })
+            inputNumbers(".")
+        }
+    }
+
+    function removeTransition (e) {
+        if (e.propertyName !== 'background-color') return;
+        e.target.classList.remove('keyPressed');
+        e.target.classList.remove('keyPressedN');
+    }
+
+    function clear_output() {
+        firstNumber = "";
+        calcOperator = "";
+        secondNumber = "";
+        result.innerHTML= "0";
+        formula.innerHTML="";
+        firstInput = true;
+        clear = false; 
+    }
+
+    const keys = Array.from(document.querySelectorAll('.key'));
+
+    </script>
+</html>
